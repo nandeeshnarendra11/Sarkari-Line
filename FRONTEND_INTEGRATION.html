@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sarkari Line - API Integration Guide</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1, h2, h3 { color: #333; margin-top: 20px; margin-bottom: 10px; }
+    h1 { border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New';
+      color: #d63384;
+    }
+    .code-block {
+      background: #f4f4f4;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    pre {
+      font-family: 'Courier New';
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .feature-list { list-style: none; }
+    .feature-list li {
+      padding: 8px 0;
+      padding-left: 30px;
+      position: relative;
+    }
+    .feature-list li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #28a745;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .endpoint-card {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .method { 
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      color: white;
+      margin-right: 10px;
+    }
+    .get { background: #61affe; }
+    .post { background: #49cc90; }
+    .put { background: #fca130; }
+    .delete { background: #f93e3e; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th { background: #667eea; color: white; }
+    .note {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .success {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>🏛️ Sarkari Line - Backend API Integration Guide</h1>
+
+<div class="success">
+  <strong>✓ Full Stack Backend Ready!</strong><br>
+  Node.js + Express + MongoDB + Twilio SMS Integration
+</div>
+
+<h2>🚀 Getting Started</h2>
+
+<h3>1. Backend Setup</h3>
+<div class="code-block">
+<pre>
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env
+
+# Start MongoDB
+mongod
+
+# Run development server
+npm run dev
+</pre>
+</div>
+
+<h3>2. Frontend Integration - JavaScript Example</h3>
+
+<h4>A. Registration with OTP</h4>
+<div class="code-block">
+<pre>
+const API_BASE = 'http://localhost:5000/api';
+
+// Step 1: Register user
+async function registerUser(userData) {
+  try {
+    const response = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone, // 10 digits only
+        password: userData.password,
+        confirmPassword: userData.confirmPassword,
+        state: userData.state,
+        district: userData.district,
+        taluk: userData.taluk
+      })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      console.log('Registration successful. OTP sent to phone.');
+      // Show OTP verification form
+      showOTPVerification(data.data.email);
+    } else {
+      alert('Error: ' + data.message);
+    }
+  } catch (error) {
+    console.error('Registration failed:', error);
+  }
+}
+
+// Step 2: Verify OTP
+async function verifyOTP(email, otp) {
+  try {
+    const response = await fetch(`${API_BASE}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      // Save token to localStorage
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
+      console.log('Verified! Redirecting...');
+      window.location.href = '/dashboard';
+    } else {
+      alert('Invalid OTP: ' + data.message);
+    }
+  } catch (error) {
+    console.error('OTP verification failed:', error);
+  }
+}
+</pre>
+</div>
+
+<h4>B. Login</h4>
+<div class="code-block">
+<pre>
+async function loginUser(email, password) {
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
+      window.location.href = '/dashboard';
+    } else {
+      alert('Login failed: ' + data.message);
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+  }
+}
+</pre>
+</div>
+
+<h4>C. Generate Queue Token</h4>
+<div class="code-block">
+<pre>
+async function generateQueueToken(officeId, serviceType) {
+  const token = localStorage.getItem('token');
+  
+  try {
+    const response = await fetch(`${API_BASE}/queue/generate-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        officeId: officeId,
+        serviceType: serviceType,
+        priority: 'normal'
+      })
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      alert(`Your token number: ${data.data.token.tokenNumber}`);
+      alert(`Position in queue: ${data.data.token.position}`);
+      alert(`Est. wait time: ${data.data.token.estimatedWaitTime} mins`);
+      // SMS will be sent automatically to user's registered phone
+    } else {
+      alert('Error: ' + data.message);
+    }
+  } catch (error) {
+    console.error('Token generation failed:', error);
+  }
+}
+</pre>
+</div>
+
+<h4>D. Get My Tokens</h4>
+<div class="code-block">
+<pre>
+async function getMyTokens() {
+  const token = localStorage.getItem('token');
+  
+  try {
+    const response = await fetch(`${API_BASE}/queue/my-tokens`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      console.log('Your tokens:', data.data);
+      // Display tokens in a table
+      displayTokens(data.data);
+    }
+  } catch (error) {
+    console.error('Failed to fetch tokens:', error);
+  }
+}
+</pre>
+</div>
+
+<h4>E. Get Queue Status</h4>
+<div class="code-block">
+<pre>
+async function getQueueStatus(officeId) {
+  try {
+    const response = await fetch(
+      `${API_BASE}/queue/office/${officeId}/status`,
+      { method: 'GET' }
+    );
+    
+    const data = await response.json();
+    if (data.success) {
+      console.log('Queue stats:', {
+        waiting: data.data.queue.waiting,
+        called: data.data.queue.called,
+        completed: data.data.queue.completed,
+        avgWaitTime: data.data.queue.averageWaitTime
+      });
+    }
+  } catch (error) {
+    console.error('Failed to fetch queue status:', error);
+  }
+}
+</pre>
+</div>
+
+<h4>F. Get All Offices</h4>
+<div class="code-block">
+<pre>
+async function getOffices(filters = {}) {
+  let url = `${API_BASE}/offices`;
+  
+  if (filters.state) url += `?state=${filters.state}`;
+  if (filters.district) url += `&district=${filters.district}`;
+  if (filters.serviceType) url += `&serviceType=${filters.serviceType}`;
+  
+  try {
+    const response = await fetch(url, { method: 'GET' });
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log(`Found ${data.count} offices`);
+      displayOffices(data.data);
+    }
+  } catch (error) {
+    console.error('Failed to fetch offices:', error);
+  }
+}
+
+// Usage
+getOffices({ state: 'Karnataka', district: 'Chikkaballapura' });
+</pre>
+</div>
+
+<h4>G. Helper Function - Set Auth Header</h4>
+<div class="code-block">
+<pre>
+// Create a helper function for authenticated requests
+async function apiCall(endpoint, method = 'GET', body = null) {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const options = {
+    method,
+    headers,
+  };
+  
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, options);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`API call failed: ${endpoint}`, error);
+    throw error;
+  }
+}
+
+// Usage:
+const tokens = await apiCall('/queue/my-tokens');
+const user = await apiCall('/auth/me');
+const newToken = await apiCall('/queue/generate-token', 'POST', {
+  officeId: 'xxx',
+  serviceType: 'Passport'
+});
+</pre>
+</div>
+
+<h2>📱 SMS Notifications</h2>
+
+<p>The system automatically sends SMS to user's registered phone number:</p>
+
+<ul class="feature-list">
+  <li><strong>Registration OTP:</strong> 6-digit code for account verification</li>
+  <li><strong>Registration Confirmation:</strong> After successful OTP verification</li>
+  <li><strong>Queue Status:</strong> When your token is called at office</li>
+  <li><strong>Appointment Reminder:</strong> Before scheduled appointment</li>
+</ul>
+
+<h2>🔐 Authentication Flow</h2>
+
+<div class="endpoint-card">
+  <p><strong>1. Register</strong></p>
+  <code class="method post">POST</code> <code>/api/auth/register</code><br>
+  Returns: User ID and message to verify OTP
+</div>
+
+<div class="endpoint-card">
+  <p><strong>2. Verify OTP</strong></p>
+  <code class="method post">POST</code> <code>/api/auth/verify-otp</code><br>
+  Returns: JWT Token (save to localStorage)
+</div>
+
+<div class="endpoint-card">
+  <p><strong>3. Login</strong></p>
+  <code class="method post">POST</code> <code>/api/auth/login</code><br>
+  Returns: JWT Token (save to localStorage)
+</div>
+
+<div class="endpoint-card">
+  <p><strong>4. Use Token</strong></p>
+  Add to every authenticated request:<br>
+  <code>Authorization: Bearer {token}</code>
+</div>
+
+<h2>📊 API Endpoints Summary</h2>
+
+<table>
+  <tr>
+    <th>Method</th>
+    <th>Endpoint</th>
+    <th>Description</th>
+    <th>Auth Required</th>
+  </tr>
+  <tr>
+    <td><span class="method post">POST</span></td>
+    <td>/api/auth/register</td>
+    <td>Register new user</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><span class="method post">POST</span></td>
+    <td>/api/auth/verify-otp</td>
+    <td>Verify OTP</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><span class="method post">POST</span></td>
+    <td>/api/auth/login</td>
+    <td>Login user</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span></td>
+    <td>/api/auth/me</td>
+    <td>Get current user</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><span class="method post">POST</span></td>
+    <td>/api/queue/generate-token</td>
+    <td>Generate queue token</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span></td>
+    <td>/api/queue/my-tokens</td>
+    <td>Get user's tokens</td>
+    <td>Yes</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span></td>
+    <td>/api/queue/office/:id/status</td>
+    <td>Get office queue status</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span></td>
+    <td>/api/offices</td>
+    <td>Get all offices</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span></td>
+    <td>/api/offices/search</td>
+    <td>Search offices</td>
+    <td>No</td>
+  </tr>
+  <tr>
+    <td><span class="method get">GET</span></td>
+    <td>/api/offices/:id</td>
+    <td>Get office details</td>
+    <td>No</td>
+  </tr>
+</table>
+
+<h2>🔑 Key Points</h2>
+
+<div class="note">
+  <strong>Phone Number Format:</strong> Use 10 digits only (e.g., 9876543210). The backend will add +91 automatically for SMS.
+</div>
+
+<div class="note">
+  <strong>Token Storage:</strong> Save JWT token in localStorage to persist user session. Clear on logout.
+</div>
+
+<div class="note">
+  <strong>Error Handling:</strong> Always check <code>response.success</code> and handle error messages appropriately.
+</div>
+
+<div class="note">
+  <strong>CORS:</strong> Backend allows requests from FRONTEND_URL (default: http://localhost:3000). Update in .env if needed.
+</div>
+
+<h2>🔧 Integration with Your HTML</h2>
+
+<p>Add these to your HTML form:</p>
+
+<div class="code-block">
+<pre>
+// Update the authentication modal in your HTML
+// Replace existing form submission with:
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = {
+    firstName: document.getElementById('regFirstName').value,
+    lastName: document.getElementById('regLastName').value,
+    email: document.getElementById('regEmail').value,
+    phone: document.getElementById('regPhone').value,
+    password: document.getElementById('regPassword').value,
+    confirmPassword: document.getElementById('regConfirmPassword').value,
+    state: document.getElementById('regState').value,
+    district: document.getElementById('regDistrict').value,
+    taluk: document.getElementById('regTaluk').value
+  };
+  
+  await registerUser(formData);
+});
+
+// Queue generation form
+document.getElementById('queueForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const officeId = document.getElementById('selectOffice').value;
+  const serviceType = document.getElementById('selectService').value;
+  await generateQueueToken(officeId, serviceType);
+});
+</pre>
+</div>
+
+<h2>✅ Testing Checklist</h2>
+
+<ul class="feature-list">
+  <li>Register with valid email and phone</li>
+  <li>Verify with OTP (default: 123456 in dev)</li>
+  <li>Login with credentials</li>
+  <li>Generate queue token</li>
+  <li>Check queue status</li>
+  <li>View my tokens</li>
+  <li>Test all API endpoints in Postman</li>
+  <li>Verify SMS sending (with Twilio credentials)</li>
+</ul>
+
+<div class="success">
+  <strong>🎉 Ready to integrate!</strong><br>
+  Your backend is fully functional. Connect it to the frontend and you're good to go!
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sarkari Line — Smart Government Queue Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- AUTH MODAL -->
+<div class="auth-modal-bg" id="authModal">
+  <div class="auth-box">
+    <button class="auth-close-btn" onclick="closeAuthModal()">✕</button>
+    <div class="auth-logo">
+      <div class="icon">🏛️</div>
+      <h1>Sarkari<span style="color:var(--saffron)">Line</span></h1>
+      <p>Smart Government Queue Management · Chickballapur District</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-form-section active" id="auth-login">
+      <div class="field">
+        <label>Phone Number / Email</label>
+        <input type="text" id="loginId" placeholder="Enter phone or email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password">
+      </div>
+      <button class="auth-btn" onclick="doLogin()">🔐 Login to Sarkari Line</button>
+      <div class="auth-note">Demo: use <strong>citizen@demo.in</strong> / <strong>demo123</strong><br>or Admin: <strong>admin@gov.in</strong> / <strong>admin999</strong></div>
+      <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--muted)">New user? <a href="#" onclick="switchAuthTab('register');return false" style="color:var(--navy);font-weight:700">Create Account</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div class="auth-form-section" id="auth-register">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Your full name">
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" id="regPhone" placeholder="10-digit mobile number">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label>Aadhaar Last 4 Digits</label>
+        <input type="text" id="regAadhaar" placeholder="XXXX" maxlength="4">
+      </div>
+      <div class="field">
+        <label>Create Password</label>
+        <input type="password" id="regPass" placeholder="Min 6 characters">
+      </div>
+      <div class="field">
+        <label>State / UT</label>
+        <select id="regState" onchange="updateDistricts()">
+          <option value="">-- Select State --</option>
+          <option value="AN">Andaman & Nicobar Islands</option>
+          <option value="AP">Andhra Pradesh</option>
+          <option value="AR">Arunachal Pradesh</option>
+          <option value="AS">Assam</option>
+          <option value="BR">Bihar</option>
+          <option value="CH">Chandigarh</option>
+          <option value="CG">Chhattisgarh</option>
+          <option value="DH">Dadra & Nagar Haveli and Daman & Diu</option>
+          <option value="DL">Delhi</option>
+          <option value="GA">Goa</option>
+          <option value="GJ">Gujarat</option>
+          <option value="HR">Haryana</option>
+          <option value="HP">Himachal Pradesh</option>
+          <option value="JK">Jammu & Kashmir</option>
+          <option value="JH">Jharkhand</option>
+          <option value="KA" selected>Karnataka</option>
+          <option value="KL">Kerala</option>
+          <option value="LA">Ladakh</option>
+          <option value="LD">Lakshadweep</option>
+          <option value="MP">Madhya Pradesh</option>
+          <option value="MH">Maharashtra</option>
+          <option value="MN">Manipur</option>
+          <option value="ML">Meghalaya</option>
+          <option value="MZ">Mizoram</option>
+          <option value="NL">Nagaland</option>
+          <option value="OD">Odisha</option>
+          <option value="PY">Puducherry</option>
+          <option value="PB">Punjab</option>
+          <option value="RJ">Rajasthan</option>
+          <option value="SK">Sikkim</option>
+          <option value="TN">Tamil Nadu</option>
+          <option value="TS">Telangana</option>
+          <option value="TR">Tripura</option>
+          <option value="UP">Uttar Pradesh</option>
+          <option value="UK">Uttarakhand</option>
+          <option value="WB">West Bengal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>District</label>
+        <select id="regDistrict" onchange="updateTaluks()">
+          <option value="">-- Select State First --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Taluk / Block</label>
+        <select id="regTaluk">
+          <option value="">-- Select District First --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Pincode (optional)</label>
+        <input type="text" id="regPincode" placeholder="6-digit pincode" maxlength="6" pattern="[0-9]{6}">
+      </div>
+      <button class="auth-btn" style="background:var(--green)" onclick="doRegister()">✅ Create Account</button>
+      <div class="auth-note">Your information is private and only used to personalize your queue experience.</div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<div class="flag-stripe"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <span>🏛️</span>
+    <span>Sarkari<span class="accent"> Line</span></span>
+  </div>
+  <div class="nav-center">
+    <button class="nav-tab active" onclick="switchTab('citizen')">👤 Live Queue</button>
+    <button class="nav-tab" onclick="switchTab('book')">🎫 Book Token</button>
+    <button class="nav-tab" onclick="switchTab('sms')">📱 SMS / WhatsApp</button>
+    <button class="nav-tab" onclick="switchTab('ratings')">⭐ Ratings</button>
+    <button class="nav-tab" onclick="switchTab('docs')">📋 Doc Checklist</button>
+    <button class="nav-tab" onclick="switchTab('guide')">📖 Help</button>
+    <button class="nav-tab" id="adminNavBtn" style="display:none" onclick="switchTab('admin')">🔒 Admin</button>
+    <button class="nav-tab" id="profileNavBtn" style="display:none" onclick="switchTab('profile')">👤 My Profile</button>
+  </div>
+  <div class="nav-right">
+    <span class="user-pill" id="userPill" style="display:none">👤 Citizen</span>
+    <button class="btn-nav-auth" id="navLoginBtn" onclick="openAuthModal('login')" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:#fff;font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Noto Sans',sans-serif;font-weight:600">Login</button>
+    <button class="btn-nav-auth" id="navRegisterBtn" onclick="openAuthModal('register')" style="background:var(--saffron);border:none;color:#fff;font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Noto Sans',sans-serif;font-weight:700">Register</button>
+    <button class="logout-btn" id="navLogoutBtn" onclick="doLogout()" style="display:none">Logout</button>
+    <div class="lang-dropdown">
+      <button class="lang-btn" id="langBtn" onclick="toggleLangMenu()">🌐 English</button>
+      <div class="lang-menu" id="langMenu">
+        <div class="lang-option active-lang" onclick="setLang('en','🌐 English',this)">🌐 English</div>
+        <div class="lang-option" onclick="setLang('kn','🌐 ಕನ್ನಡ',this)">🌐 ಕನ್ನಡ (Kannada)</div>
+        <div class="lang-option" onclick="setLang('hi','🌐 हिन्दी',this)">🌐 हिन्दी (Hindi)</div>
+        <div class="lang-option" onclick="setLang('ta','🌐 தமிழ்',this)">🌐 தமிழ் (Tamil)</div>
+        <div class="lang-option" onclick="setLang('te','🌐 తెలుగు',this)">🌐 తెలుగు (Telugu)</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- NOTICE HEADLINE (editable by admin only) -->
+<div class="notice-bar" id="noticeBar">
+  <span class="notice-badge">📢 Notice</span>
+  <span class="notice-text" id="noticeText">⚠️ DC Office: Aadhaar counter expected wait 55 min as of 11:42 AM — plan accordingly.</span>
+  <span class="notice-time" id="noticeTime">Updated: 11:42 AM</span>
+</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <span class="ticker-label">📡 Live</span>
+  <div class="ticker-wrap">
+    <span class="ticker-text" id="tickerText">Aadhaar counter at DC Office open till 5 PM today &nbsp;•&nbsp; Ration card correction window: Mon–Wed 10 AM–2 PM &nbsp;•&nbsp; Land Records office closed this Saturday (Govt holiday) &nbsp;•&nbsp; Passport seva: bring original documents + 2 photocopies &nbsp;•&nbsp; Token system active at SDM office block B &nbsp;•&nbsp; Senior citizen priority queue: arrive at any office and show ID at gate</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <h1>🏛️ Sarkari Line — Live Queue Status, Chickballapur District</h1>
+      <p>Know before you go. Check counter status, wait times &amp; documents needed.</p>
+      <div class="hero-helpline">📞 Helpline: <strong>1800-425-0051</strong> &nbsp;|&nbsp; ☎️ Missed Call: <strong>56767</strong> (Free)</div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-white" onclick="showShareModal(null)">🔗 Share Page</button>
+      <button class="btn btn-outline" onclick="refreshAll()" id="refreshBtn">🔄 Refresh Now</button>
+      <button class="btn btn-outline" onclick="switchTab('book')">🎫 Book Token</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alertBanner">
+  <div class="pulse-dot"></div>
+  <span id="alertText">🔴 DC Office — Aadhaar counter expected wait: <strong>55 min</strong> as of 11:42 AM. Plan accordingly.</span>
+</div>
+
+<!-- MAIN CONTAINER -->
+
+<!-- MAIN CONTAINER -->
+<div class="main">
+<div class="tab-content active" id="tab-citizen">
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-card green">
+      <div class="stat-emoji">🏢</div>
+      <div class="stat-num" id="statOfficesOpen">6</div>
+      <div class="stat-label">Offices Open Now</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">🪟</div>
+      <div class="stat-num" id="statCountersOpen">18</div>
+      <div class="stat-label">Counters Active</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-emoji">⏱️</div>
+      <div class="stat-num" id="statAvgWait">~28</div>
+      <div class="stat-label">Avg Wait (min)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">✅</div>
+      <div class="stat-num">87%</div>
+      <div class="stat-label">Info Accuracy</div>
+    </div>
+  </div>
+
+  <!-- REFRESH BAR -->
+  <div class="refresh-bar">
+    <div class="refresh-status">
+      <div class="live-dot"></div>
+      <span>Live data · Last refreshed: <strong id="lastRefreshTime">just now</strong></span>
+    </div>
+    <div class="refresh-actions">
+      <label class="auto-refresh-toggle">
+        <label class="toggle-switch">
+          <input type="checkbox" id="autoRefreshToggle" onchange="toggleAutoRefresh()" checked>
+          <span class="slider"></span>
+        </label>
+        Auto-refresh (30s)
+      </label>
+      <button class="btn btn-navy btn-sm" onclick="refreshAll()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <!-- SEARCH & FILTER -->
+  <div class="search-bar">
+    <span style="color:var(--muted);font-size:18px">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search office, service or location…" oninput="filterCards()">
+    <button class="btn btn-white btn-sm" style="border:1.5px solid var(--border)" onclick="gpsLocate()">📍 Near Me</button>
+  </div>
+  <div class="filter-row">
+    <button class="filter-chip active" onclick="setFilter(this,'all')">All Offices</button>
+    <button class="filter-chip" onclick="setFilter(this,'open')">🟢 Open Now</button>
+    <button class="filter-chip" onclick="setFilter(this,'passport')">🛂 Passport</button>
+    <button class="filter-chip" onclick="setFilter(this,'ration')">🍚 Ration Card</button>
+    <button class="filter-chip" onclick="setFilter(this,'land')">🗺️ Land Records</button>
+    <button class="filter-chip" onclick="setFilter(this,'aadhaar')">🪪 Aadhaar</button>
+    <button class="filter-chip" onclick="setFilter(this,'short')">⚡ Wait &lt;15 min</button>
+  </div>
+
+  <!-- LIVE MAP -->
+  <div id="liveMap"></div>
+
+  <!-- OFFICE CARDS -->
+  <div class="section-row">
+    <div class="section-title">Government Offices <span class="badge" id="card-count">8 offices</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" style="background:#fff;color:var(--navy);border:1.5px solid var(--navy)" onclick="sortByWait()">⬆ Sort by Wait</button>
+      <button class="btn btn-sm" style="background:#fff;color:var(--navy);border:1.5px solid var(--navy)" onclick="sortByTrust()">⭐ Sort by Trust</button>
+      <button class="btn btn-sm" style="background:#fff;color:var(--navy);border:1.5px solid var(--navy)" onclick="sortByRating()">🏆 Sort by Rating</button>
+    </div>
+  </div>
+
+  <div class="offices-grid" id="officesGrid"></div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- BOOK TOKEN TAB                                                 -->
+<!-- ============================================================ -->
+<div class="tab-content" id="tab-book">
+  <div class="section-title">🎫 Book Virtual Queue Token</div>
+  <div style="background:linear-gradient(90deg,#fff3e0,#ffe0b2);border:2px solid var(--saffron);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+    <span style="font-size:28px;flex-shrink:0">🔐</span>
+    <div>
+      <div style="font-size:15px;font-weight:800;color:var(--saffron-dark);font-family:'Baloo 2',cursive">Sign Up is Compulsory to Book a Token</div>
+      <div style="font-size:13px;color:var(--saffron-dark);margin-top:3px">You must be a registered user to book a virtual queue token. <a href="#" onclick="openAuthModal('register');return false" style="color:var(--navy);font-weight:700;text-decoration:underline">Register free in 30 seconds →</a></div>
+    </div>
+  </div>
+  <div id="bookLoginWall" style="display:none;background:#FFF3E0;border:2px solid var(--saffron);border-radius:12px;padding:22px;text-align:center;margin-bottom:20px">
+    <div style="font-size:32px;margin-bottom:8px">🎫🔐</div>
+    <div style="font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;color:var(--navy);margin-bottom:6px">Login Required to Book Token</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Token booking is available only to registered users. It's free and takes just 30 seconds.</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-navy" onclick="openAuthModal('login')">🔐 Login</button>
+      <button class="btn btn-green" onclick="openAuthModal('register')">✅ Register Free</button>
+    </div>
+  </div>
+  <div id="bookFormContent">
+  <div class="sticky-note">You'll receive your token via SMS after booking. No QR scan required at the gate — just show your phone.</div>
+
+  <div style="background:#fff;border-radius:var(--radius);border:1.5px solid var(--border);padding:24px;max-width:560px;box-shadow:var(--shadow)">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Select Office</label>
+        <select id="bookOffice" onchange="loadBookCounters()">
+          <option value="">-- Choose Office --</option>
+          <option value="dc">DC Office (District Collectorate)</option>
+          <option value="passport">Passport Seva Kendra</option>
+          <option value="ration">Ration Card Office</option>
+          <option value="land">Land Records (Tahsildar)</option>
+          <option value="aadhaar">Aadhaar Enrollment Centre</option>
+          <option value="sdm">SDM Office</option>
+          <option value="birth">Birth / Death Certificate</option>
+          <option value="police">Police Station (NOC/Verify)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Select Counter / Service</label>
+        <select id="bookCounter">
+          <option value="">-- Select Office First --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Preferred Time Slot</label>
+        <select id="bookSlot">
+          <option>09:00 – 10:00 AM</option>
+          <option>10:00 – 11:00 AM</option>
+          <option>11:00 AM – 12:00 PM</option>
+          <option>12:00 – 01:00 PM</option>
+          <option>02:00 – 03:00 PM</option>
+          <option>03:00 – 04:00 PM</option>
+          <option>04:00 – 05:00 PM</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Citizen Type</label>
+        <select id="bookType">
+          <option value="general">General</option>
+          <option value="senior">Senior Citizen (60+)</option>
+          <option value="disabled">Differently Abled</option>
+          <option value="pregnant">Pregnant Women</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Your Mobile Number (for SMS)</label>
+        <input type="tel" id="bookPhone" placeholder="10-digit mobile number">
+      </div>
+    </div>
+    <button class="btn btn-green" style="width:100%;justify-content:center;font-size:15px;padding:12px" onclick="bookToken()">🎫 Generate Token &amp; Get SMS</button>
+    <div id="tokenConfirmBox" style="display:none"></div>
+  </div>
+
+  </div><!-- end bookFormContent -->
+  <!-- PRIORITY QUEUES INFO -->
+  <div style="margin-top:24px">
+    <div class="section-title">🚨 Priority Queue System</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <div class="guide-card" style="border-color:#ce93d8">
+        <div class="guide-emoji">👴</div>
+        <h3>Senior Citizens</h3>
+        <p>60+ age. Fast-track token assigned. Just show Aadhaar at gate.</p>
+      </div>
+      <div class="guide-card" style="border-color:#90caf9">
+        <div class="guide-emoji">♿</div>
+        <h3>Differently Abled</h3>
+        <p>Separate queue. Ground floor counter reserved at all major offices.</p>
+      </div>
+      <div class="guide-card" style="border-color:#a5d6a7">
+        <div class="guide-emoji">🤰</div>
+        <h3>Pregnant Women</h3>
+        <p>Priority seating + fast queue. Dedicated counter at DC &amp; Aadhaar.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SMS / WHATSAPP TAB                                             -->
+<!-- ============================================================ -->
+<div class="tab-content" id="tab-sms">
+  <div class="section-title">📱 SMS &amp; WhatsApp Queue System</div>
+
+  <!-- HELPLINE & MISSED CALL -->
+  <div class="helpline-box">
+    <div>📞</div>
+    <div class="helpline-info">
+      <h3>Helpline Numbers</h3>
+      <p>Toll-free: <strong>1800-425-0051</strong> · Press 1 for DC Office, 2 for Passport, 3 for Ration Card</p>
+      <p style="margin-top:4px">Available: Mon–Sat, 9 AM – 6 PM · Kannada / Hindi / English</p>
+    </div>
+    <div>
+      <div class="missed-call-box">
+        <div style="font-size:12px;color:#1565C0;font-weight:700;margin-bottom:4px">📲 MISSED CALL FOR STATUS</div>
+        <div class="missed-call-num">56767</div>
+        <div style="font-size:12px;color:#1565C0;margin-top:4px">Give a missed call → Get SMS update instantly<br>No internet needed · Completely FREE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMS BOOKING SECTION -->
+  <div class="sms-system">
+    <div class="section-title" style="margin-bottom:10px">💬 SMS Token Booking</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Send SMS to <strong>56767</strong> — works on any basic phone without internet:</p>
+    <div class="sms-command-grid">
+      <div class="sms-command-card">
+        <div class="cmd">QUEUE PASSPORT</div>
+        <div class="desc">Book passport queue token</div>
+        <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px;font-size:12px;color:var(--navy);border:1px solid #c5cae9">
+          <div style="font-weight:700">Reply you'll receive:</div>
+          Your token is P102<br>
+          Estimated wait: 45 mins<br>
+          Office Status: OPEN
+        </div>
+      </div>
+      <div class="sms-command-card">
+        <div class="cmd">STATUS DC_OFFICE</div>
+        <div class="desc">Check DC Office status</div>
+        <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px;font-size:12px;color:var(--navy);border:1px solid #c5cae9">
+          <div style="font-weight:700">Reply:</div>
+          DC Office Bangalore: OPEN<br>
+          Queue Load: MEDIUM<br>
+          Avg Wait Time: 30 mins
+        </div>
+      </div>
+      <div class="sms-command-card">
+        <div class="cmd">NEARBY PASSPORT</div>
+        <div class="desc">Find nearby passport offices</div>
+        <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px;font-size:12px;color:var(--navy);border:1px solid #c5cae9">
+          <div style="font-weight:700">Reply:</div>
+          1. Passport Seva Kendra KR Puram<br>
+          2. Passport Office Whitefield<br>
+          3. Passport Office Marathahalli
+        </div>
+      </div>
+      <div class="sms-command-card">
+        <div class="cmd">MISSED P103</div>
+        <div class="desc">Recover missed token turn</div>
+        <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px;font-size:12px;color:var(--navy);border:1px solid #c5cae9">
+          <div style="font-weight:700">Reply:</div>
+          Next available slot: P108<br>
+          Estimated time: 15 mins
+        </div>
+      </div>
+      <div class="sms-command-card">
+        <div class="cmd">PRIORITY SENIOR</div>
+        <div class="desc">Get fast-track senior token</div>
+        <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px;font-size:12px;color:var(--navy);border:1px solid #c5cae9">
+          <div style="font-weight:700">Reply:</div>
+          Priority token SR-014 issued<br>
+          Report to counter 2<br>
+          Estimated wait: 5 mins
+        </div>
+      </div>
+      <div class="sms-command-card">
+        <div class="cmd">QUEUE AADHAAR KN</div>
+        <div class="desc">Queue query in Kannada</div>
+        <div style="margin-top:8px;background:#fff;border-radius:8px;padding:8px;font-size:12px;color:var(--navy);border:1px solid #c5cae9">
+          <div style="font-weight:700">ಉತ್ತರ:</div>
+          ನಿಮ್ಮ ಟೋಕನ್: A045<br>
+          ನಿರೀಕ್ಷಿತ ಸಮಯ: 20 ನಿಮಿಷ
+        </div>
+      </div>
+    </div>
+    <div style="background:#FFF3E0;border-radius:10px;padding:14px;margin-top:16px;font-size:13px;color:var(--saffron-dark)">
+      <strong>📡 Live Queue Updates via SMS:</strong> System automatically sends you: <em>"Current Token: P089 · Your turn in approx 15 mins"</em> — No action needed from your side.
+    </div>
+  </div>
+
+  <!-- WHATSAPP BOT -->
+  <div class="whatsapp-box">
+    <h3>💬 WhatsApp Bot — Queue Updates</h3>
+    <p style="font-size:13px;color:#2e7d32;margin-bottom:16px">Add <strong>+91 98765 56767</strong> and send a message to get started:</p>
+    <div class="wa-flow">
+      <div class="wa-msg incoming">Hi, I want to check Passport Office wait time</div>
+      <div class="wa-msg outgoing">🏛️ <strong>Passport Seva Kendra, Chickballapur</strong><br>Status: OPEN ✅<br>Current wait: ~35 mins<br>People in queue: 18<br>Counter 2 (Renewal): only 15 min wait!<br><br>Type BOOK PASSPORT to get a token.</div>
+      <div class="wa-msg incoming">BOOK PASSPORT</div>
+      <div class="wa-msg outgoing">✅ Token booked: <strong>P-114</strong><br>Slot: 11:30 AM – 12:00 PM<br>📋 Don't forget: Aadhaar + Birth certificate + Photograph<br><br>Reply STATUS to check current token being served.</div>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:#2e7d32;background:rgba(255,255,255,0.5);border-radius:8px;padding:10px">
+      ✅ Supports English, ಕನ್ನಡ &amp; Hindi &nbsp;|&nbsp; 🔔 Auto-alerts when your turn is near &nbsp;|&nbsp; 📋 Document checklists &nbsp;|&nbsp; 🗺️ Office directions
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- RATINGS TAB (Client-only, logged-in only)                       -->
+<!-- ============================================================ -->
+<div class="tab-content" id="tab-ratings">
+  <div class="section-title">⭐ Rate Your Experience</div>
+  <div style="background:#E8F5E9;border:2px solid var(--green);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#2e7d32;display:flex;align-items:center;gap:10px">
+    <span style="font-size:22px">🔒</span>
+    <div><strong>Ratings are by verified clients only.</strong> Only citizens who have logged in and visited an office can submit a rating — no random or anonymous ratings are accepted.</div>
+  </div>
+  <div id="ratingsLoginWall" style="display:none;background:#FFF3E0;border:2px solid var(--saffron);border-radius:12px;padding:18px;text-align:center;margin-bottom:20px">
+    <div style="font-size:28px;margin-bottom:8px">🔐</div>
+    <div style="font-family:'Baloo 2',cursive;font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px">Login Required to Rate</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Only registered clients can rate their experience. Please sign in to continue.</div>
+    <button class="btn btn-navy" onclick="openAuthModal('login')">🔐 Login / Register</button>
+  </div>
+  <div id="ratingsContent">
+    <div class="rating-section">
+      <div class="section-title" style="font-size:15px;margin-bottom:14px">Submit Your Rating</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Select Office You Visited</label>
+        <select id="ratingOfficeSelect" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Noto Sans',sans-serif;font-size:14px;outline:none">
+          <option value="">-- Select Office --</option>
+          <option value="dc">DC Office (District Collectorate)</option>
+          <option value="passport">Passport Seva Kendra</option>
+          <option value="ration">Ration Card Office</option>
+          <option value="land">Land Records (Tahsildar)</option>
+          <option value="aadhaar">Aadhaar Enrollment Centre</option>
+          <option value="sdm">SDM Office</option>
+          <option value="birth">Birth / Death Certificate Office</option>
+          <option value="police">Police Station (NOC/Verify)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px">Your Experience Rating</label>
+        <div class="rating-stars-big" id="ratingStarsBig">
+          <span class="r-star-big" data-val="1" onmouseover="hoverRating(1)" onmouseout="unhoverRating()" onclick="selectRating(1)">★</span>
+          <span class="r-star-big" data-val="2" onmouseover="hoverRating(2)" onmouseout="unhoverRating()" onclick="selectRating(2)">★</span>
+          <span class="r-star-big" data-val="3" onmouseover="hoverRating(3)" onmouseout="unhoverRating()" onclick="selectRating(3)">★</span>
+          <span class="r-star-big" data-val="4" onmouseover="hoverRating(4)" onmouseout="unhoverRating()" onclick="selectRating(4)">★</span>
+          <span class="r-star-big" data-val="5" onmouseover="hoverRating(5)" onmouseout="unhoverRating()" onclick="selectRating(5)">★</span>
+        </div>
+        <div id="ratingLabel" style="font-size:13px;color:var(--muted);margin-top:4px">Click a star to rate</div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Your Comments (optional)</label>
+        <textarea id="ratingComment" class="rating-comment" placeholder="Tell us about your experience at this office..."></textarea>
+      </div>
+      <button style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:11px 24px;font-family:'Noto Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer" onclick="submitRating()">⭐ Submit Rating</button>
+    </div>
+
+    <div class="section-title">📊 Community Ratings</div>
+    <div id="communityRatingsList" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DOCUMENT CHECKLIST TAB                                         -->
+<!-- ============================================================ -->
+<div class="tab-content" id="tab-docs">
+  <div class="section-title">📋 Document Checklist</div>
+  <div style="background:#E8EAF6;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--navy)">
+    <strong>📌 How to use:</strong> Select the office you are visiting, then check off each document as you gather it. Make sure all items are ticked before leaving home!
+  </div>
+  <div class="rating-section">
+    <div class="form-group" style="margin-bottom:16px">
+      <label style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Select Office &amp; Service</label>
+      <select id="docOfficeSelect" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'Noto Sans',sans-serif;font-size:14px;outline:none;margin-bottom:10px" onchange="renderDocChecklist()">
+        <option value="">-- Select Office --</option>
+        <option value="dc">DC Office (District Collectorate)</option>
+        <option value="passport">Passport Seva Kendra</option>
+        <option value="ration">Ration Card Office</option>
+        <option value="land">Land Records (Tahsildar)</option>
+        <option value="aadhaar">Aadhaar Enrollment Centre</option>
+        <option value="sdm">SDM Office</option>
+        <option value="birth">Birth / Death Certificate Office</option>
+        <option value="police">Police Station (NOC/Verify)</option>
+      </select>
+    </div>
+    <div id="docChecklistContainer">
+      <div style="text-align:center;padding:32px;color:var(--muted);font-size:14px">👆 Select an office above to see the document checklist</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- GUIDE TAB                                                      -->
+<!-- ============================================================ -->
+<div class="tab-content" id="tab-guide">
+  <div class="section-title">📖 How To Use Sarkari Line</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:24px">
+    <div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px">
+      <div style="font-size:32px;margin-bottom:10px">📱</div>
+      <h3 style="font-family:'Baloo 2',cursive;color:var(--navy);margin-bottom:6px">Basic Phone (No App)</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">Open this link in any browser — even 2G works. No app download, no QR code needed.</p>
+    </div>
+    <div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px">
+      <div style="font-size:32px;margin-bottom:10px">📤</div>
+      <h3 style="font-family:'Baloo 2',cursive;color:var(--navy);margin-bottom:6px">Share to WhatsApp</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">Tap "Share" on any office card and send live link via WhatsApp — family can check from home.</p>
+    </div>
+    <div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px">
+      <div style="font-size:32px;margin-bottom:10px">💬</div>
+      <h3 style="font-family:'Baloo 2',cursive;color:var(--navy);margin-bottom:6px">SMS (No Internet)</h3>
+      <div class="sms-box" style="margin-top:8px">
+        SMS <strong>WAIT DC</strong> to <strong>56767</strong><br>
+        SMS <strong>WAIT PASSPORT</strong> to <strong>56767</strong><br>
+        SMS <strong>QUEUE AADHAAR</strong> to <strong>56767</strong>
+      </div>
+      <p style="font-size:12px;color:var(--muted)">Or give a <strong>Missed Call on 56767</strong> — get free SMS instantly.</p>
+    </div>
+    <div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px">
+      <div style="font-size:32px;margin-bottom:10px">📞</div>
+      <h3 style="font-family:'Baloo 2',cursive;color:var(--navy);margin-bottom:6px">Helpline (IVR)</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">Call <strong>1800-425-0051</strong> (toll free). Press 1 for DC Office, 2 for Passport, 3 for Ration Card. Hear wait time in Kannada / Hindi / English.</p>
+    </div>
+    <div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px">
+      <div style="font-size:32px;margin-bottom:10px">📋</div>
+      <h3 style="font-family:'Baloo 2',cursive;color:var(--navy);margin-bottom:6px">Document Checklist</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">Each counter card shows documents needed. Tap a counter to expand checklist with checkboxes so you don't travel only to be turned away.</p>
+    </div>
+    <div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px">
+      <div style="font-size:32px;margin-bottom:10px">🔔</div>
+      <h3 style="font-family:'Baloo 2',cursive;color:var(--navy);margin-bottom:6px">Wait Alerts</h3>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">Tap "🔔 Alert Me" on any counter to get an SMS when wait drops below 15 min. No app required.</p>
+    </div>
+  </div>
+
+  <div class="offline-banner">
+    <span style="font-size:20px">📶</span>
+    <div><strong>Offline / Low Signal?</strong> Last known status cached automatically. Pull down to refresh when back online.</div>
+  </div>
+
+  <div style="background:var(--navy);border-radius:14px;padding:20px;color:#fff">
+    <h3 style="font-family:'Baloo 2',cursive;font-size:18px;margin-bottom:12px">🏢 For Office Staff — Quick Guide</h3>
+    <ol style="font-size:13px;line-height:2.2;padding-left:16px;opacity:0.9">
+      <li>Ask your District Admin for a Staff ID and 6-digit PIN</li>
+      <li>Go to <strong>Admin Panel</strong> tab in navigation</li>
+      <li>Enter Staff ID, Office, and 6-digit PIN to authenticate</li>
+      <li>Update counter status, wait times and announcements</li>
+      <li>Press <strong>"Publish Update"</strong> — goes live instantly</li>
+      <li>Repeat after every major change (rush, counter closure, lunch)</li>
+    </ol>
+    <p style="font-size:12px;margin-top:10px;opacity:0.6">Staff portal is private — citizen interface only shows public info.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ADMIN TAB                                                      -->
+<!-- ============================================================ -->
+<div class="tab-content" id="tab-admin">
+
+  <!-- ADMIN LOCK SCREEN (shown if not admin) -->
+  <div class="admin-lock" id="adminLockScreen">
+    <div class="lock-icon">🔐</div>
+    <h2>Admin Access Only</h2>
+    <p>This panel is restricted to authorised government staff.<br>Login with admin credentials to access this panel.</p>
+    <button class="btn btn-white" onclick="showToast('Login as admin@gov.in / admin999 to access.')">← Go to Login</button>
+  </div>
+
+  <!-- ADMIN PANEL CONTENT (shown if admin) -->
+  <div id="adminPanelContent" style="display:none">
+
+    <!-- NOTICE EDITOR -->
+    <div class="notice-editor">
+      <h3>📢 Headline Notice (Shown at Top of Site)</h3>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Notice Text</label>
+        <textarea id="adminNoticeText" rows="2" style="resize:vertical">⚠️ DC Office: Aadhaar counter expected wait 55 min as of 11:42 AM — plan accordingly.</textarea>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-amber btn-sm" onclick="publishNotice()">📢 Publish Notice</button>
+        <button class="btn btn-danger btn-sm" onclick="clearNotice()">✕ Hide Notice</button>
+      </div>
+    </div>
+
+    <!-- TICKER EDITOR -->
+    <div style="background:#fff;border-radius:var(--radius);border:1.5px solid var(--navy);padding:20px;margin-bottom:20px">
+      <h3 style="font-family:'Baloo 2',cursive;color:var(--navy);font-size:16px;margin-bottom:12px">📡 Ticker / Scroll Announcement</h3>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Ticker Text (separate items with ·)</label>
+        <textarea id="adminTickerText" rows="3" style="resize:vertical">Aadhaar counter at DC Office open till 5 PM today · Ration card correction window: Mon–Wed 10 AM–2 PM · Land Records office closed this Saturday · Passport seva: bring original documents + 2 photocopies</textarea>
+      </div>
+      <button class="btn btn-navy btn-sm" onclick="publishTicker()">📡 Update Ticker</button>
+    </div>
+
+    <!-- STAFF UPDATE PANEL -->
+    <div class="staff-panel">
+      <div class="staff-header">
+        <h2>🔒 Staff Update Panel — Counter Status</h2>
+        <span style="font-size:12px;opacity:0.7">Access requires valid Staff ID + 6-digit PIN</span>
+      </div>
+      <div class="staff-body">
+        <div class="sticky-note">
+          Updates are <strong>timestamped and linked to your Staff ID</strong>. Incorrect updates lower trust score. Do not share your PIN.
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Select Office</label>
+            <select id="staffOffice" onchange="loadStaffCounters()">
+              <option value="">-- Select Office --</option>
+              <option value="dc">DC Office</option>
+              <option value="passport">Passport Seva Kendra</option>
+              <option value="ration">Ration Card Office</option>
+              <option value="land">Land Records (Tahsildar)</option>
+              <option value="aadhaar">Aadhaar Enrollment Centre</option>
+              <option value="sdm">SDM Office</option>
+              <option value="birth">Birth/Death Certificate Office</option>
+              <option value="police">Police Station</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Staff ID</label>
+            <input type="text" id="staffId" placeholder="e.g. CBP-042">
+          </div>
+          <div class="form-group">
+            <label>Office Status</label>
+            <select id="staffStatus">
+              <option value="open">🟢 Open</option>
+              <option value="busy">🟡 Busy</option>
+              <option value="closed">🔴 Closed</option>
+              <option value="partial">🟠 Partial</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Announcement (optional)</label>
+            <input type="text" id="staffAnnounce" placeholder="e.g. Aadhaar rush — arrive before 10 AM">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px">
+          <label>6-Digit Staff PIN <span style="color:var(--muted);font-weight:normal;text-transform:none">(private)</span></label>
+          <div class="pin-row">
+            <input type="password" class="pin-input" id="staffPin" maxlength="6" placeholder="••••••">
+            <span style="font-size:12px;color:var(--muted);font-style:italic">Demo PIN: 123456</span>
+          </div>
+        </div>
+
+        <div class="counter-editor">
+          <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Counter Status</div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr 80px auto;gap:8px;padding:6px 12px;background:#F0F4FF;border-radius:8px;margin-bottom:8px;font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase">
+            <span>Counter Name</span><span>Status</span><span>Wait (min)</span><span>People</span><span></span>
+          </div>
+          <div id="counterEditorRows"></div>
+          <button class="btn btn-outline" style="background:#fff;color:var(--navy);border:1.5px dashed var(--navy);font-size:12px;margin-top:8px" onclick="addCounterRow()">+ Add Counter</button>
+        </div>
+
+        <div class="divider"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="submitStaffUpdate()">✅ Publish Update</button>
+          <button class="btn btn-amber" onclick="scheduleAlert()">🔔 Schedule Alert</button>
+          <button class="btn btn-danger" onclick="markEmergencyClosed()">🚨 Emergency Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CROWD PREDICTION -->
+    <div style="background:#fff;border-radius:var(--radius);border:1.5px solid var(--border);padding:20px;margin-bottom:24px;box-shadow:var(--shadow)">
+      <div class="section-title" style="margin-bottom:14px">📊 Crowd Analytics &amp; Smart Predictions</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+        <div class="prediction-card">
+          <h4>DC Office — Today's Crowd Forecast</h4>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">9–10 AM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-mid" style="width:50%"></div></div><span style="font-size:11px;color:var(--muted)">Medium</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">10–12 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-high" style="width:90%"></div></div><span style="font-size:11px;color:#D32F2F">Very Busy</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">12–2 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-mid" style="width:60%"></div></div><span style="font-size:11px;color:var(--muted)">Busy</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">2–4 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-low" style="width:30%"></div></div><span style="font-size:11px;color:var(--green)">Low</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">4–5 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-low" style="width:25%"></div></div><span style="font-size:11px;color:var(--green)">Low</span></div>
+          <div style="background:#E8F5E9;border-radius:8px;padding:8px;margin-top:10px;font-size:12px;color:#2E7D32">💡 Best time to visit: 2–4 PM</div>
+        </div>
+        <div class="prediction-card">
+          <h4>Passport Office — Today's Crowd Forecast</h4>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">9–10 AM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-high" style="width:85%"></div></div><span style="font-size:11px;color:#D32F2F">Very Busy</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">10–12 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-high" style="width:95%"></div></div><span style="font-size:11px;color:#D32F2F">Very Busy</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">12–2 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-high" style="width:80%"></div></div><span style="font-size:11px;color:#D32F2F">Busy</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">2–4 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-mid" style="width:55%"></div></div><span style="font-size:11px;color:var(--muted)">Medium</span></div>
+          <div class="crowd-bar-row"><span class="crowd-bar-label">4–5 PM</span><div class="crowd-bar"><div class="crowd-bar-fill fill-mid" style="width:40%"></div></div><span style="font-size:11px;color:var(--muted)">Medium</span></div>
+          <div style="background:#FFF3E0;border-radius:8px;padding:8px;margin-top:10px;font-size:12px;color:#E65100">⚠️ Highly crowded 11 AM–2 PM today</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end adminPanelContent -->
+</div>
+
+<!-- ============================================================ -->
+<!-- PROFILE TAB                                                    -->
+<!-- ============================================================ -->
+<div class="tab-content" id="tab-profile">
+  <div class="section-title">👤 My Profile</div>
+  <div class="profile-card">
+    <div class="profile-avatar" id="profileAvatar">👤</div>
+    <div class="profile-name" id="profileName">Citizen</div>
+    <div class="profile-id" id="profileUID">IQ-000000</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px" id="profileDetails"></div>
+  </div>
+
+  <div class="section-title">🎫 My Token History</div>
+  <div style="background:#fff;border-radius:var(--radius);border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow)">
+    <table class="token-history">
+      <thead><tr><th>Token</th><th>Office</th><th>Counter</th><th>Date/Time</th><th>Status</th></tr></thead>
+      <tbody id="tokenHistory">
+        <tr><td>P-098</td><td>Passport Seva</td><td>Renewal</td><td>Today 10:15 AM</td><td style="color:var(--green);font-weight:600">✅ Served</td></tr>
+        <tr><td>A-042</td><td>Aadhaar Centre</td><td>Biometric</td><td>Yesterday 2:30 PM</td><td style="color:var(--amber);font-weight:600">⏳ Missed</td></tr>
+        <tr><td>D-019</td><td>DC Office</td><td>Income Cert.</td><td>3 days ago 11:00 AM</td><td style="color:var(--green);font-weight:600">✅ Served</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- .main -->
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <h2>🔗 Share Office Status</h2>
+    <p id="shareModalDesc">Share the live status link for this office.</p>
+    <div class="share-link-box" id="shareLink">sarkariline.gov.in/cbp/dc-office</div>
+    <div class="share-methods">
+      <button class="share-method-btn" onclick="copyLink()">📋 Copy Link</button>
+      <button class="share-method-btn" onclick="shareWhatsApp()">💬 WhatsApp</button>
+      <button class="share-method-btn" onclick="shareSMS()">📱 SMS</button>
+      <button class="share-method-btn" onclick="window.print()">🖨️ Print QR</button>
+    </div>
+    <div class="sms-note">
+      📲 <strong>No internet?</strong> Send this SMS to anyone: "Check queue → sarkariline.gov.in/cbp"
+    </div>
+    <div style="margin-top:14px">
+      <div class="qr-placeholder"></div>
+      <p style="text-align:center;font-size:12px;color:var(--muted)">Scan or print this QR for office entrance</p>
+    </div>
+    <button class="btn btn-navy" style="width:100%;justify-content:center;margin-top:12px" onclick="closeModal('shareModal')">✖ Close</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal">
+    <h2>🔗 Share Office Info</h2>
+    <p>Share this office's live queue status with others</p>
+    <div class="share-link-box" id="shareLink">https://sarkariline.gov.in/office/dc-chickballapur</div>
+    <div class="share-methods">
+      <button class="share-method-btn" onclick="copyShareLink()">📋 Copy Link</button>
+      <button class="share-method-btn" onclick="shareWhatsApp()">💬 WhatsApp</button>
+      <button class="share-method-btn" onclick="shareSMS()">📱 SMS</button>
+      <button class="share-method-btn" onclick="shareEmail()">📧 Email</button>
+    </div>
+    <div class="qr-placeholder"></div>
+    <div class="sms-note">📱 No internet? Send SMS <strong>STATUS DC_OFFICE</strong> to <strong>56767</strong> for free updates</div>
+    <button class="btn btn-navy" style="width:100%;justify-content:center;margin-top:14px" onclick="closeShareModal()">Close</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="js/main.js"></script>
+</body>
+</html>

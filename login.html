@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Sarkari Line</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px">
+  <div class="auth-box" style="animation:fadeUp 0.4s ease">
+    <div class="auth-logo">
+      <div class="icon">🏛️</div>
+      <h1>Sarkari<span style="color:var(--saffron)">Line</span></h1>
+      <p>Smart Government Queue Management · Chickballapur District</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+    </div>
+    <div class="auth-form-section active" id="auth-login">
+      <div class="field">
+        <label>Phone Number / Email</label>
+        <input type="text" id="loginId" placeholder="Enter phone or email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password">
+      </div>
+      <button class="auth-btn" onclick="doLoginPage()">🔐 Login to Sarkari Line</button>
+      <div class="auth-note">Demo: use <strong>citizen@demo.in</strong> / <strong>demo123</strong><br>or Admin: <strong>admin@gov.in</strong> / <strong>admin999</strong></div>
+      <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--muted)">New user? <a href="register.html" style="color:var(--navy);font-weight:700">Create Account</a></div>
+    </div>
+    <div class="auth-form-section" id="auth-register" style="text-align:center;padding:20px 0">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Create a free account to book tokens and track queues.</p>
+      <a href="register.html" class="auth-btn" style="display:inline-block;text-decoration:none;text-align:center">✅ Go to Register Page</a>
+    </div>
+    <div style="text-align:center;margin-top:16px"><a href="../index.html" style="font-size:12px;color:var(--muted)">← Back to Home</a></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+function doLoginPage() {
+  const id = document.getElementById('loginId').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  if (!id || !pass) { alert('Enter email/phone and password'); return; }
+  if ((id === 'admin@gov.in' && pass === 'admin999') || (id === 'citizen@demo.in' && pass === 'demo123')) {
+    sessionStorage.setItem('sl_user', JSON.stringify({email: id, name: id === 'admin@gov.in' ? 'Admin' : 'Rajesh Kumar'}));
+    window.location.href = '../index.html';
+  } else { alert('Invalid credentials'); }
+}
+</script>
+</body>
+</html>

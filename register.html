@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — Sarkari Line</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px">
+  <div class="auth-box" style="max-width:500px;animation:fadeUp 0.4s ease">
+    <div class="auth-logo">
+      <div class="icon">🏛️</div>
+      <h1>Create Account</h1>
+      <p>Join Sarkari Line — Free queue management for citizens</p>
+    </div>
+    <div class="field"><label>Full Name</label><input type="text" id="regName" placeholder="Your full name"></div>
+    <div class="field"><label>Phone Number</label><input type="tel" id="regPhone" placeholder="10-digit mobile number"></div>
+    <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="your@email.com"></div>
+    <div class="field"><label>Aadhaar Last 4 Digits</label><input type="text" id="regAadhaar" placeholder="XXXX" maxlength="4"></div>
+    <div class="field"><label>Create Password</label><input type="password" id="regPass" placeholder="Min 6 characters"></div>
+    <div class="field">
+      <label>State / UT</label>
+      <select id="regState">
+        <option value="">-- Select State --</option>
+        <option value="KA" selected>Karnataka</option>
+        <option value="AP">Andhra Pradesh</option>
+        <option value="MH">Maharashtra</option>
+        <option value="TN">Tamil Nadu</option>
+        <option value="UP">Uttar Pradesh</option>
+        <option value="DL">Delhi</option>
+      </select>
+    </div>
+    <div class="field"><label>District</label><input type="text" id="regDistrict" placeholder="Your district"></div>
+    <div class="field"><label>Taluk / Block</label><input type="text" id="regTaluk" placeholder="Your taluk"></div>
+    <div class="field"><label>Pincode (optional)</label><input type="text" id="regPincode" placeholder="6-digit pincode" maxlength="6"></div>
+    <button class="auth-btn" style="background:var(--green)" onclick="doRegisterPage()">✅ Create Account</button>
+    <div class="auth-note">Your information is private and only used to personalize your queue experience.</div>
+    <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--muted)">Already have an account? <a href="login.html" style="color:var(--navy);font-weight:700">Login</a></div>
+    <div style="text-align:center;margin-top:10px"><a href="../index.html" style="font-size:12px;color:var(--muted)">← Back to Home</a></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+function doRegisterPage() {
+  const name = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if (!name || !phone || !email || !pass) { alert('Fill all required fields'); return; }
+  if (pass.length < 6) { alert('Password must be at least 6 characters'); return; }
+  const uid = 'SL-' + Math.floor(100000 + Math.random()*900000);
+  sessionStorage.setItem('sl_user', JSON.stringify({name, phone, email, uid, role:'citizen'}));
+  alert('Account created! Welcome, ' + name);
+  window.location.href = '../index.html';
+}
+</script>
+</body>
+</html>

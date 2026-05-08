@@ -1,0 +1,43 @@
+/* Dashboard-specific styles */
+/* Imported by dashboard.html; extend or override style.css here */
+
+.dashboard-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+
+.dashboard-header h2 {
+  font-family: 'Baloo 2', cursive;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.dashboard-card {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.dashboard-card h3 {
+  font-family: 'Baloo 2', cursive;
+  font-size: 15px;
+  color: var(--navy);
+  margin-bottom: 10px;
+}

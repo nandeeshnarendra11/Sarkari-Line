@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office Directory — Sarkari Line</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<!-- AUTH MODAL -->
+<div class="auth-modal-bg" id="authModal">
+  <div class="auth-box">
+    <button class="auth-close-btn" onclick="closeAuthModal()">✕</button>
+    <div class="auth-logo">
+      <div class="icon">🏛️</div>
+      <h1>Sarkari<span style="color:var(--saffron)">Line</span></h1>
+      <p>Smart Government Queue Management · Chickballapur District</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-form-section active" id="auth-login">
+      <div class="field">
+        <label>Phone Number / Email</label>
+        <input type="text" id="loginId" placeholder="Enter phone or email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password">
+      </div>
+      <button class="auth-btn" onclick="doLogin()">🔐 Login to Sarkari Line</button>
+      <div class="auth-note">Demo: use <strong>citizen@demo.in</strong> / <strong>demo123</strong><br>or Admin: <strong>admin@gov.in</strong> / <strong>admin999</strong></div>
+      <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--muted)">New user? <a href="#" onclick="switchAuthTab('register');return false" style="color:var(--navy);font-weight:700">Create Account</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div class="auth-form-section" id="auth-register">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Your full name">
+      </div>
+      <div class="field">
+        <label>Phone Number</label>
+        <input type="tel" id="regPhone" placeholder="10-digit mobile number">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label>Aadhaar Last 4 Digits</label>
+        <input type="text" id="regAadhaar" placeholder="XXXX" maxlength="4">
+      </div>
+      <div class="field">
+        <label>Create Password</label>
+        <input type="password" id="regPass" placeholder="Min 6 characters">
+      </div>
+      <div class="field">
+        <label>State / UT</label>
+        <select id="regState" onchange="updateDistricts()">
+          <option value="">-- Select State --</option>
+          <option value="AN">Andaman & Nicobar Islands</option>
+          <option value="AP">Andhra Pradesh</option>
+          <option value="AR">Arunachal Pradesh</option>
+          <option value="AS">Assam</option>
+          <option value="BR">Bihar</option>
+          <option value="CH">Chandigarh</option>
+          <option value="CG">Chhattisgarh</option>
+          <option value="DH">Dadra & Nagar Haveli and Daman & Diu</option>
+          <option value="DL">Delhi</option>
+          <option value="GA">Goa</option>
+          <option value="GJ">Gujarat</option>
+          <option value="HR">Haryana</option>
+          <option value="HP">Himachal Pradesh</option>
+          <option value="JK">Jammu & Kashmir</option>
+          <option value="JH">Jharkhand</option>
+          <option value="KA" selected>Karnataka</option>
+          <option value="KL">Kerala</option>
+          <option value="LA">Ladakh</option>
+          <option value="LD">Lakshadweep</option>
+          <option value="MP">Madhya Pradesh</option>
+          <option value="MH">Maharashtra</option>
+          <option value="MN">Manipur</option>
+          <option value="ML">Meghalaya</option>
+          <option value="MZ">Mizoram</option>
+          <option value="NL">Nagaland</option>
+          <option value="OD">Odisha</option>
+          <option value="PY">Puducherry</option>
+          <option value="PB">Punjab</option>
+          <option value="RJ">Rajasthan</option>
+          <option value="SK">Sikkim</option>
+          <option value="TN">Tamil Nadu</option>
+          <option value="TS">Telangana</option>
+          <option value="TR">Tripura</option>
+          <option value="UP">Uttar Pradesh</option>
+          <option value="UK">Uttarakhand</option>
+          <option value="WB">West Bengal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>District</label>
+        <select id="regDistrict" onchange="updateTaluks()">
+          <option value="">-- Select State First --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Taluk / Block</label>
+        <select id="regTaluk">
+          <option value="">-- Select District First --</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Pincode (optional)</label>
+        <input type="text" id="regPincode" placeholder="6-digit pincode" maxlength="6" pattern="[0-9]{6}">
+      </div>
+      <button class="auth-btn" style="background:var(--green)" onclick="doRegister()">✅ Create Account</button>
+      <div class="auth-note">Your information is private and only used to personalize your queue experience.</div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<div class="flag-stripe"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <span>🏛️</span>
+    <span>Sarkari<span class="accent"> Line</span></span>
+  </div>
+  <div class="nav-center">
+    <button class="nav-tab active" onclick="switchTab('citizen')">👤 Live Queue</button>
+    <button class="nav-tab" onclick="switchTab('book')">🎫 Book Token</button>
+    <button class="nav-tab" onclick="switchTab('sms')">📱 SMS / WhatsApp</button>
+    <button class="nav-tab" onclick="switchTab('ratings')">⭐ Ratings</button>
+    <button class="nav-tab" onclick="switchTab('docs')">📋 Doc Checklist</button>
+    <button class="nav-tab" onclick="switchTab('guide')">📖 Help</button>
+    <button class="nav-tab" id="adminNavBtn" style="display:none" onclick="switchTab('admin')">🔒 Admin</button>
+    <button class="nav-tab" id="profileNavBtn" style="display:none" onclick="switchTab('profile')">👤 My Profile</button>
+  </div>
+  <div class="nav-right">
+    <span class="user-pill" id="userPill" style="display:none">👤 Citizen</span>
+    <button class="btn-nav-auth" id="navLoginBtn" onclick="openAuthModal('login')" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:#fff;font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Noto Sans',sans-serif;font-weight:600">Login</button>
+    <button class="btn-nav-auth" id="navRegisterBtn" onclick="openAuthModal('register')" style="background:var(--saffron);border:none;color:#fff;font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Noto Sans',sans-serif;font-weight:700">Register</button>
+    <button class="logout-btn" id="navLogoutBtn" onclick="doLogout()" style="display:none">Logout</button>
+    <div class="lang-dropdown">
+      <button class="lang-btn" id="langBtn" onclick="toggleLangMenu()">🌐 English</button>
+      <div class="lang-menu" id="langMenu">
+        <div class="lang-option active-lang" onclick="setLang('en','🌐 English',this)">🌐 English</div>
+        <div class="lang-option" onclick="setLang('kn','🌐 ಕನ್ನಡ',this)">🌐 ಕನ್ನಡ (Kannada)</div>
+        <div class="lang-option" onclick="setLang('hi','🌐 हिन्दी',this)">🌐 हिन्दी (Hindi)</div>
+        <div class="lang-option" onclick="setLang('ta','🌐 தமிழ்',this)">🌐 தமிழ் (Tamil)</div>
+        <div class="lang-option" onclick="setLang('te','🌐 తెలుగు',this)">🌐 తెలుగు (Telugu)</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- NOTICE HEADLINE (editable by admin only) -->
+<div class="notice-bar" id="noticeBar">
+  <span class="notice-badge">📢 Notice</span>
+  <span class="notice-text" id="noticeText">⚠️ DC Office: Aadhaar counter expected wait 55 min as of 11:42 AM — plan accordingly.</span>
+  <span class="notice-time" id="noticeTime">Updated: 11:42 AM</span>
+</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <span class="ticker-label">📡 Live</span>
+  <div class="ticker-wrap">
+    <span class="ticker-text" id="tickerText">Aadhaar counter at DC Office open till 5 PM today &nbsp;•&nbsp; Ration card correction window: Mon–Wed 10 AM–2 PM &nbsp;•&nbsp; Land Records office closed this Saturday (Govt holiday) &nbsp;•&nbsp; Passport seva: bring original documents + 2 photocopies &nbsp;•&nbsp; Token system active at SDM office block B &nbsp;•&nbsp; Senior citizen priority queue: arrive at any office and show ID at gate</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <h1>🏛️ Sarkari Line — Live Queue Status, Chickballapur District</h1>
+      <p>Know before you go. Check counter status, wait times &amp; documents needed.</p>
+      <div class="hero-helpline">📞 Helpline: <strong>1800-425-0051</strong> &nbsp;|&nbsp; ☎️ Missed Call: <strong>56767</strong> (Free)</div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-white" onclick="showShareModal(null)">🔗 Share Page</button>
+      <button class="btn btn-outline" onclick="refreshAll()" id="refreshBtn">🔄 Refresh Now</button>
+      <button class="btn btn-outline" onclick="switchTab('book')">🎫 Book Token</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alertBanner">
+  <div class="pulse-dot"></div>
+  <span id="alertText">🔴 DC Office — Aadhaar counter expected wait: <strong>55 min</strong> as of 11:42 AM. Plan accordingly.</span>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="main">
+<div class="tab-content active" id="tab-citizen">
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-card green">
+      <div class="stat-emoji">🏢</div>
+      <div class="stat-num" id="statOfficesOpen">6</div>
+      <div class="stat-label">Offices Open Now</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">🪟</div>
+      <div class="stat-num" id="statCountersOpen">18</div>
+      <div class="stat-label">Counters Active</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-emoji">⏱️</div>
+      <div class="stat-num" id="statAvgWait">~28</div>
+      <div class="stat-label">Avg Wait (min)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-emoji">✅</div>
+      <div class="stat-num">87%</div>
+      <div class="stat-label">Info Accuracy</div>
+    </div>
+  </div>
+
+  <!-- REFRESH BAR -->
+  <div class="refresh-bar">
+    <div class="refresh-status">
+      <div class="live-dot"></div>
+      <span>Live data · Last refreshed: <strong id="lastRefreshTime">just now</strong></span>
+    </div>
+    <div class="refresh-actions">
+      <label class="auto-refresh-toggle">
+        <label class="toggle-switch">
+          <input type="checkbox" id="autoRefreshToggle" onchange="toggleAutoRefresh()" checked>
+          <span class="slider"></span>
+        </label>
+        Auto-refresh (30s)
+      </label>
+      <button class="btn btn-navy btn-sm" onclick="refreshAll()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <!-- SEARCH & FILTER -->
+  <div class="search-bar">
+    <span style="color:var(--muted);font-size:18px">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search office, service or location…" oninput="filterCards()">
+    <button class="btn btn-white btn-sm" style="border:1.5px solid var(--border)" onclick="gpsLocate()">📍 Near Me</button>
+  </div>
+  <div class="filter-row">
+    <button class="filter-chip active" onclick="setFilter(this,'all')">All Offices</button>
+    <button class="filter-chip" onclick="setFilter(this,'open')">🟢 Open Now</button>
+    <button class="filter-chip" onclick="setFilter(this,'passport')">🛂 Passport</button>
+    <button class="filter-chip" onclick="setFilter(this,'ration')">🍚 Ration Card</button>
+    <button class="filter-chip" onclick="setFilter(this,'land')">🗺️ Land Records</button>
+    <button class="filter-chip" onclick="setFilter(this,'aadhaar')">🪪 Aadhaar</button>
+    <button class="filter-chip" onclick="setFilter(this,'short')">⚡ Wait &lt;15 min</button>
+  </div>
+
+  <!-- LIVE MAP -->
+  <div id="liveMap"></div>
+
+  <!-- OFFICE CARDS -->
+  <div class="section-row">
+    <div class="section-title">Government Offices <span class="badge" id="card-count">8 offices</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" style="background:#fff;color:var(--navy);border:1.5px solid var(--navy)" onclick="sortByWait()">⬆ Sort by Wait</button>
+      <button class="btn btn-sm" style="background:#fff;color:var(--navy);border:1.5px solid var(--navy)" onclick="sortByTrust()">⭐ Sort by Trust</button>
+      <button class="btn btn-sm" style="background:#fff;color:var(--navy);border:1.5px solid var(--navy)" onclick="sortByRating()">🏆 Sort by Rating</button>
+    </div>
+  </div>
+
+  <div class="offices-grid" id="officesGrid"></div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- BOOK TOKEN TAB                                                 -->
+<!-- ============================================================ -->
+</div>
+<div id="toast" class="toast"></div>
+
+<script src="../js/main.js"></script>
+</body>
+</html>
